@@ -2,7 +2,6 @@
 import { useRef, useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Image from "next/image";
 import "../app/globals.css";
 import { STATS } from "@/lib/data"
 
@@ -152,13 +151,11 @@ export default function Hero() {
         </div>
 
         <div className="road">
-          <Image
+          <img
             ref={car}
             src="/McLaren 720S 2022 top view.png"
             alt="McLaren supercar"
             className="car"
-            width={418}
-            height={190}
           />
           <div ref={trail} className="trail" />
           <div ref={textValueAdd} className="value-add">
