@@ -1,10 +1,14 @@
 "use client";
-import "../app/globals.css";
 import { useRef, useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Image from "next/image";
+import "../app/globals.css";
+import { STATS } from "@/lib/data"
 
 gsap.registerPlugin(ScrollTrigger);
+
+
 
 export default function Hero() {
   const container = useRef<HTMLDivElement>(null);
@@ -12,15 +16,29 @@ export default function Hero() {
   const car = useRef<HTMLImageElement>(null);
   const trail = useRef<HTMLDivElement>(null);
   const textValueAdd = useRef<HTMLDivElement>(null);
-
-  const box1 = useRef<HTMLDivElement>(null);
-  const box2 = useRef<HTMLDivElement>(null);
-  const box3 = useRef<HTMLDivElement>(null);
-  const box4 = useRef<HTMLDivElement>(null);
+  const scrollHint = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const ctx = gsap.context((self) => {
-      const letters = self.selector?.(".value-letter") as HTMLElement[];
+      const loadTl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      const headlineLetters = self.selector?.(
+        ".headline-letter",
+      ) as HTMLElement[];
+
+      loadTl.from(headlineLetters, {
+        opacity: 0,
+        y: 30,
+        stagger: 0.025,
+        duration: 0.55,
+      });
+      loadTl.from(
+        scrollHint.current,
+        { opacity: 0, y: 10, duration: 0.5 },
+        "-=0.2",
+      );
+
+      const roadLetters = self.selector?.(".value-letter") as HTMLElement[];
+      const statCards = self.selector?.(".stat-card") as HTMLElement[];
       const carEl = car.current;
       const trailEl = trail.current;
       const trackEl = track.current;
@@ -29,7 +47,14 @@ export default function Hero() {
       if (!carEl || !trailEl || !trackEl || !valueAddEl) return;
 
       const valueRect = valueAddEl.getBoundingClientRect();
-      const letterOffsets = letters.map((letter) => letter.offsetLeft);
+      const letterOffsets = roadLetters.map((letter) => letter.offsetLeft);
+      const cardCenterXs = statCards.map((card) => {
+        const rect = card.getBoundingClientRect();
+        return rect.left + rect.width / 2;
+      });
+      const cardOpacityTo = statCards.map((card) =>
+        gsap.quickTo(card, "opacity", { duration: 0.5, ease: "power2.out" }),
+      );
 
       const roadWidth = window.innerWidth;
       const carWidth = carEl.clientWidth || 150;
@@ -47,102 +72,112 @@ export default function Hero() {
         ease: "none",
         onUpdate: function () {
           const carX = (gsap.getProperty(carEl, "x") as number) + carWidth / 5;
-          letters.forEach((letter, i) => {
+
+          roadLetters.forEach((letter, i) => {
             const letterX = valueRect.left + letterOffsets[i];
-            if (carX >= letterX) {
-              letter.style.opacity = "1";
-            } else {
-              letter.style.opacity = "0";
-            }
+            letter.style.opacity = carX >= letterX ? "1" : "0";
           });
+
+          const fadeWidth = 235;
+          statCards.forEach((card, i) => {
+            const center = cardCenterXs[i];
+            const fadeInStart = center - fadeWidth;
+            let opacity = 0;
+            if (carX >= center) {
+              opacity = 1;
+            } else if (carX >= fadeInStart) {
+              opacity = (carX - fadeInStart) / fadeWidth;
+            }
+            cardOpacityTo[i](Math.min(1, Math.max(0, opacity)));
+          });
+
           gsap.set(trailEl, { width: carX });
         },
-      });
-
-      gsap.to(box1.current, {
-        scrollTrigger: {
-          trigger: container.current,
-          start: "top+=400 top",
-          end: "top+=600 top",
-          scrub: true,
-        },
-        opacity: 1,
-      });
-
-      gsap.to(box2.current, {
-        scrollTrigger: {
-          trigger: container.current,
-          start: "top+=600 top",
-          end: "top+=800 top",
-          scrub: true,
-        },
-        opacity: 1,
-      });
-
-      gsap.to(box3.current, {
-        scrollTrigger: {
-          trigger: container.current,
-          start: "top+=800 top",
-          end: "top+=1000 top",
-          scrub: true,
-        },
-        opacity: 1,
-      });
-
-      gsap.to(box4.current, {
-        scrollTrigger: {
-          trigger: container.current,
-          start: "top+=1000 top",
-          end: "top+=1200 top",
-          scrub: true,
-        },
-        opacity: 1,
       });
     }, container);
 
     return () => ctx.revert();
   }, []);
 
+  const headline = "WELCOME ITZFIZZ";
+
   return (
     <div ref={container} className="section">
       <div ref={track} className="track">
-        <div className="road" id="road">
-          <img
-            ref={car}
-            src="/McLaren 720S 2022 top view.png"
-            alt="car"
-            className="car"
-          />
-          <div ref={trail} className="trail"></div>
-          <div ref={textValueAdd} className="value-add">
-            <span className="value-letter">W</span>
-            <span className="value-letter">E</span>
-            <span className="value-letter">L</span>
-            <span className="value-letter">C</span>
-            <span className="value-letter">O</span>
-            <span className="value-letter">M</span>
-            <span className="value-letter">E</span>
-            <span className="value-letter">&nbsp;</span>
-            <span className="value-letter">I</span>
-            <span className="value-letter">T</span>
-            <span className="value-letter">Z</span>
-            <span className="value-letter">F</span>
-            <span className="value-letter">I</span>
-            <span className="value-letter">Z</span>
-            <span className="value-letter">Z</span>
+        <div className="hero-header">
+          <h1 className="hero-headline">
+            {headline.split("").map((char, i) =>
+              char === " " ? (
+                <span
+                  key={i}
+                  className="headline-letter"
+                  style={{ display: "inline-block", width: "0.5em" }}
+                >
+                  &nbsp;
+                </span>
+              ) : (
+                <span key={i} className="headline-letter">
+                  {char}
+                </span>
+              ),
+            )}
+          </h1>
+
+          <div className="stats-row">
+            {STATS.map((stat, i) => (
+              <div
+                key={i}
+                className="stat-card"
+                style={{ backgroundColor: stat.bg, color: stat.color }}
+              >
+                <span className="stat-value">{stat.value}</span>
+                <span className="stat-label">{stat.label}</span>
+              </div>
+            ))}
           </div>
         </div>
-        <div ref={box1} className="text-box" id="box1" style={{ top: "5%", right: "30%" }}>
-          <span className="num-box">58%</span> Increase in pick up point use
+
+        <div ref={scrollHint} className="scroll-hint">
+          <span>Scroll to explore</span>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M12 5v14M5 12l7 7 7-7" />
+          </svg>
         </div>
-        <div ref={box2} className="text-box" id="box2" style={{ bottom: "5%", right: "35%" }}>
-          <span className="num-box">23%</span> Decreased in customer phone calls
-        </div>
-        <div ref={box3} className="text-box" id="box3" style={{ top: "5%", right: "10%" }}>
-          <span className="num-box">27%</span> Increase in pick up point use
-        </div>
-        <div ref={box4} className="text-box" id="box4" style={{ bottom: "5%", right: "12.5%" }}>
-          <span className="num-box">40%</span> Decreased in customer phone calls
+
+        <div className="road">
+          <Image
+            ref={car}
+            src="/McLaren 720S 2022 top view.png"
+            alt="McLaren supercar"
+            className="car"
+            width={418}
+            height={190}
+          />
+          <div ref={trail} className="trail" />
+          <div ref={textValueAdd} className="value-add">
+            {"WELCOME ITZFIZZ".split("").map((char, i) =>
+              char === " " ? (
+                <span
+                  key={i}
+                  className="value-letter"
+                  style={{ width: "0.5em", display: "inline-block" }}
+                >
+                  &nbsp;
+                </span>
+              ) : (
+                <span key={i} className="value-letter">
+                  {char}
+                </span>
+              ),
+            )}
+          </div>
         </div>
       </div>
     </div>
