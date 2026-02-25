@@ -3,11 +3,9 @@ import { useRef, useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import "../app/globals.css";
-import { STATS } from "@/lib/data"
+import { STATS } from "@/lib/data";
 
 gsap.registerPlugin(ScrollTrigger);
-
-
 
 export default function Hero() {
   const container = useRef<HTMLDivElement>(null);
@@ -153,7 +151,7 @@ export default function Hero() {
         <div className="road">
           <img
             ref={car}
-            src="/McLaren 720S 2022 top view.png"
+            src={`${process.env.NODE_ENV === "production" ? "/scroll-animation" : ""}/McLaren 720S 2022 top view.png`}
             alt="McLaren supercar"
             className="car"
           />
